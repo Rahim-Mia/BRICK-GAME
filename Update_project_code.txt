@@ -1,0 +1,360 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<conio.h>
+#include<graphics.h>
+
+#define height 550
+#define width 1110
+#define _radious 20
+#define _paddle_height 100
+#define _paddle_width 200
+#define _speed 15
+#define n 11
+
+int collision_result ;
+int x=height/2,y=height/2;
+int paddle_pos =300;
+bool exit_game = true, keydown = false;
+int xspeed,yspeed,cnt=0;
+
+struct bricks
+{
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    bool isAlive;
+};
+struct bricks bricksArray[5][12];
+
+void gotoxy(int x,int y)//
+{
+    HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD CursorPosition;
+    CursorPosition.X= x;
+    CursorPosition.Y= y;
+    SetConsoleCursorPosition(console,CursorPosition);
+
+}
+
+bool WIN(int cnt)//win function
+{
+    if(cnt==55)
+    {
+
+        cleardevice();
+        system("cls");
+        printf("\033[1;31m");//Red color
+        gotoxy(50,2);
+        printf("YOU WIN");
+        gotoxy(50,3);
+        printf("GAME OVER!");
+        settextstyle(8, 0, 5);
+        outtextxy(400, 50, "YOU WIN");
+        outtextxy(400,100,"GAME OVER!");
+        exit_game=false;
+        getch();
+    }
+}
+
+void LOSS()//loss function
+{
+ char str[10];
+    cleardevice();
+    system("cls");
+    printf("\033[1;31m");
+    gotoxy(50,2);
+    printf("YOU LOSS\n");
+    gotoxy(50,3);
+    printf("GAME OVER!\n");
+    settextstyle(8, 0, 5);
+
+    outtextxy(400, 50, "YOU LOSS\n");
+
+    outtextxy(400,100,"GAME OVER!\n");
+
+    //getch();
+
+}
+
+void Break_breaker(int x,int y)// brick breaker function
+{
+    int NewC=x/100;
+    if(y-_radious<=250&&bricksArray[4][NewC].isAlive!=false)
+    {
+        bricksArray[4][NewC].isAlive=false;
+        yspeed=-yspeed;
+        cnt++;
+
+    }
+    else if(y-_radious-10<=200&&bricksArray[3][NewC].isAlive!=false)
+    {
+        bricksArray[3][NewC].isAlive=false;
+        yspeed=-yspeed;
+        cnt++;
+    }
+    else if(y-_radious-10<=150&&bricksArray[2][NewC].isAlive!=false)
+    {
+        bricksArray[2][NewC].isAlive=false;
+        yspeed=-yspeed;
+        cnt++;
+    }
+    else if(y-_radious-10<=100&&bricksArray[1][NewC].isAlive!=false)
+    {
+        bricksArray[1][NewC].isAlive=false;
+        yspeed=-yspeed;
+        cnt++;
+    }
+    else if(y-_radious-10<=50&&bricksArray[0][NewC].isAlive!=false)
+    {
+        bricksArray[0][NewC].isAlive=false;
+        yspeed=-yspeed;
+        cnt++;
+    }
+    WIN(cnt);
+}
+
+void movement()//paddle movement
+{
+    if(GetAsyncKeyState(VK_RIGHT)&&paddle_pos<=900)
+        paddle_pos+=20;
+    else if(GetAsyncKeyState(VK_LEFT)&&paddle_pos>0)
+        paddle_pos-=20;
+    else if(GetAsyncKeyState(VK_ESCAPE))
+        exit_game = true;
+}
+
+int   detect_colition(int cx,int cy,int px1,int px2,int py)//paddle collision
+{
+    bool result = 0;
+    int newCx1 = cx;
+    int newCx2 = cx;
+    int newCy = cy+_radious;
+
+
+    if(newCy>=py)
+    {
+        if((newCx1>px1 && newCx2<=px2))
+        {
+            return 1;
+        }
+        else
+        {
+            return 2;
+        }
+    }
+    return result;
+
+}
+
+void Brick_create()//brick create function
+{
+    for(int i=0; i<(n/2); i++)
+    {
+        for(int j=0; j<n; j++)
+        {
+            //int c=rand();
+            if(bricksArray[i][j].isAlive==true)
+            {
+
+
+                int x1=bricksArray[i][j].x1;
+                int y1=bricksArray[i][j].y1;
+                int x2=bricksArray[i][j].x2;
+                int y2=bricksArray[i][j].y2;
+                 int k=rand();
+                setcolor(k);//k
+                setfillstyle(1,k);
+                rectangle(x1,y1,x2,y2);
+                floodfill(x1+1,y1+1,k);
+            }
+        }
+    }
+}
+
+void instruction()// INSTRUCTION_OF_GAME
+{
+    //cleardevice();
+    system("cls");
+   settextstyle(8, 0, 4);
+    outtextxy(10, 50, "(i) Use '<-' key to move slider to left");
+    outtextxy(10, 100, "(ii) Use '->' key to move slider to right");
+    outtextxy(10, 150, "(iii) Press 1 to start game");
+    outtextxy(10, 200, "(iv) Press 0 to exit from the game");
+    outtextxy(10,250,"Please Press 0 or 1");
+    char ch;
+    ch=getch();
+    if(ch=='1')
+    {
+
+        while(exit_game)
+
+        {
+            cleardevice();//BGI CONSULE CLEAR
+
+            Brick_create();// BRICK CREATE
+            movement();// PADDLE MOVEMENT
+            setcolor(LIGHTGREEN);
+            setfillstyle(1,10);
+            rectangle(paddle_pos,500,paddle_pos+200,600);
+
+            floodfill(paddle_pos+1,500+1,LIGHTGREEN);
+
+            setcolor(WHITE);
+            setfillstyle(1,15);
+            circle(x,y,_radious);
+            floodfill(x,y,WHITE);
+            x=x+xspeed;
+            y=y+yspeed;
+
+            collision_result = detect_colition(x,y,paddle_pos,paddle_pos+ _paddle_width,500);
+            if(collision_result==2)// invalid place
+            {
+                LOSS();
+                exit_game=0;
+                //break;
+            }
+            // detect border collsion
+            Break_breaker(x,y);
+
+            if(x>(width-_radious-_speed)||x<=_radious)
+            {
+
+                xspeed=-xspeed;
+            }
+            if(collision_result==1)
+            {
+
+                yspeed=-yspeed;
+            }
+
+            if(y>=(height-_radious-_speed)||y<=_radious)
+            {
+                yspeed=-yspeed;
+
+            }
+
+            delay(80);
+        }
+    }
+    else
+    {
+
+        exit(0);
+    }
+
+    // getch();
+
+}
+int main()//main function
+{
+
+    int gd = DETECT, gm;
+    initgraph(&gd,&gm,"C:\\TC\\BGI");// initilize grpahic
+ setbkcolor(8);
+    initwindow(width,height);
+    //setbkcolor(8);
+    settextstyle(8, 0, 5);
+    outtextxy(100, 5, "WELLCOME TO BRICK BREAKER GAME");
+    settextstyle(8, 0, 5);
+    outtextxy(100,50,"1. Start Game");
+
+    outtextxy(100,100,"2. Instruction");
+    outtextxy(100,150,"3. Exit Game");
+    outtextxy(100,200,"Selection Option");
+    char ch;
+    ch=getch();
+
+
+    int left=10,top=10,right=100,bottom=50,space=5;
+    int init_x=left,init_y=right,step=0;
+    for(int i=0; i<(n/2); i++)// input for bricks
+    {
+        int init_top=top+step;
+        int init_bottom=bottom+step;
+        init_x=left;
+        init_y=right;
+
+        for(int j=0; j<n; j++)
+        {
+            bricksArray[i][j].x1=init_x;
+            bricksArray[i][j].y1=init_top;
+            bricksArray[i][j].x2=init_y;
+            bricksArray[i][j].y2=init_bottom;
+            bricksArray[i][j].isAlive=true;
+            init_x=init_y+space;
+            init_y+=right;
+
+        }
+        printf("\n");
+        step+=50;
+    }
+    xspeed=_speed;
+    yspeed=_speed;
+
+    gotoxy(10,13);
+
+    if(ch=='1')
+    {
+
+        while(exit_game)
+        {
+            cleardevice();//BGI CONSULE CLEAR
+
+            Brick_create();
+            movement();
+            setcolor(CYAN);
+            setfillstyle(1,4);
+            rectangle(paddle_pos,500,paddle_pos+200,600);
+
+            floodfill(paddle_pos+1,500+1,CYAN);
+
+            setcolor(WHITE);
+            setfillstyle(1,15);
+            circle(x,y,_radious);
+            floodfill(x,y,WHITE);
+            x=x+xspeed;
+            y=y+yspeed;
+
+            collision_result = detect_colition(x,y,paddle_pos,paddle_pos+ _paddle_width,500);
+            if(collision_result==2)
+            {
+                LOSS();
+                exit_game=0;
+                //break;
+
+            }
+
+            Break_breaker(x,y); // detect border collsion
+
+            if(x>(width-_radious-_speed)||x<=_radious)
+            {
+
+                xspeed=-xspeed;
+            }
+            if(collision_result==1)
+            {
+
+                yspeed=-yspeed;
+            }
+
+            if(y>=(height-_radious-_speed)||y<=_radious)
+            {
+                yspeed=-yspeed;
+
+            }
+
+            delay(80);
+        }
+    }
+    else if(ch=='2')
+        instruction();// instruction
+    else if(ch=='3')
+        exit(0);
+    getch();
+    closegraph();
+    return 0;
+}
+
+
+
